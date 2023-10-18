@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
 use crate::board::BoardPosition;
-use crate::stack::Stack;
+use crate::stack::{are_not_stackable, Stack};
 use crate::utils::stack_to_image_path;
 
 pub fn stack_pieces(
@@ -14,8 +14,12 @@ pub fn stack_pieces(
     mut query_transforms: Query<&mut Transform>,
     mut query_stacks: Query<&mut Stack>,
 ) {
-    // merge the stacks
     let dropped_stack: Stack = (*(&query_stacks.get(event.dropped).unwrap())).clone();
+    if are_not_stackable(&dropped_stack, query_stacks.get(event.target).unwrap()) {
+        return;
+    }
+
+    // merge the stacks
     query_stacks
         .get_mut(event.target)
         .unwrap()

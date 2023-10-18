@@ -51,6 +51,10 @@ impl Stack {
     }
 }
 
+pub fn are_not_stackable(s1: &Stack, s2: &Stack) -> bool {
+    s1.pieces.len() + s2.pieces.len() > 5
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
