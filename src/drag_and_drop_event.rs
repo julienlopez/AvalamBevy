@@ -6,10 +6,9 @@ use crate::stack::Stack;
 use crate::utils::stack_to_image_path;
 
 pub fn stack_pieces(
-    // The event data accessible by the callback system
     event: Listener<Pointer<Drop>>,
     asset_server: Res<AssetServer>,
-    // mut commands: Commands,
+    mut commands: Commands,
     query_positions: Query<&BoardPosition>,
     mut query_sprites: Query<&mut Handle<Image>>,
     mut query_transforms: Query<&mut Transform>,
@@ -34,6 +33,25 @@ pub fn stack_pieces(
     // replace dropped to proper position
     let original_dropped_position = query_positions.get(event.dropped).unwrap();
     *query_transforms.get_mut(event.dropped).unwrap() = Transform::from_xyz(
+        original_dropped_position.world_pos.x,
+        original_dropped_position.world_pos.y,
+        0.0,
+    );
+
+    commands.entity(event.dropped).despawn();
+}
+
+pub fn on_drag_end(
+    event: Listener<Pointer<DragEnd>>,
+    mut commands: Commands,
+    query_positions: Query<&BoardPosition>,
+    mut query_transforms: Query<&mut Transform>,
+) {
+    commands.entity(event.target).insert(Pickable::default());
+
+    // replace dropped to proper position
+    let original_dropped_position = query_positions.get(event.target).unwrap();
+    *query_transforms.get_mut(event.target).unwrap() = Transform::from_xyz(
         original_dropped_position.world_pos.x,
         original_dropped_position.world_pos.y,
         0.0,

@@ -5,8 +5,8 @@ mod stack;
 use board::grid_2_world;
 use stack::{Piece, Stack};
 
-mod stack_pieces;
-use stack_pieces::stack_pieces;
+mod drag_and_drop_event;
+use drag_and_drop_event::{on_drag_end, stack_pieces};
 
 mod utils;
 use crate::utils::{image_path, stack_to_image_path};
@@ -47,9 +47,10 @@ fn spawn_piece_stack(
         stack,
         PickableBundle::default(), // <- Makes the mesh pickable.
         On::<Pointer<DragStart>>::target_insert(Pickable::IGNORE), // Disable picking
-        On::<Pointer<DragEnd>>::target_insert(Pickable::default()), // Re-enable picking
+        // On::<Pointer<DragEnd>>::target_insert(Pickable::default()), // Re-enable picking
+        On::<Pointer<DragEnd>>::run(on_drag_end),
         On::<Pointer<Drag>>::target_component_mut::<Transform>(|drag, transform| {
-            transform.translation.x += drag.delta.x; // Make the square follow the mouse
+            transform.translation.x += drag.delta.x;
             transform.translation.y -= drag.delta.y;
         }),
         On::<Pointer<Drop>>::run(stack_pieces),
