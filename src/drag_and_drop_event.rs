@@ -42,7 +42,7 @@ pub fn stack_pieces(
         0.0,
     );
 
-    commands.entity(event.dropped).despawn();
+    // commands.entity(event.dropped).despawn();
 }
 
 pub fn on_drag_end(
