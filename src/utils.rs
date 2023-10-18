@@ -1,12 +1,9 @@
-use bevy::prelude::*;
-
 use crate::stack::Stack;
 
-#[derive(Component)]
-pub struct BoardPosition {
-    pub pos: Vec2,
+pub fn image_path(filename_root: &str) -> String {
+    format!("images/{}.png", filename_root).to_string()
 }
 
 pub fn stack_to_image_path(stack: &Stack) -> String {
-    format!("images/{}.png", stack.to_string()).to_string()
+    image_path(&stack.to_string())
 }

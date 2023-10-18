@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
+use crate::board::BoardPosition;
 use crate::stack::Stack;
-
-use crate::utils::{stack_to_image_path, BoardPosition};
+use crate::utils::stack_to_image_path;
 
 pub fn stack_pieces(
     // The event data accessible by the callback system
@@ -34,8 +34,8 @@ pub fn stack_pieces(
     // replace dropped to proper position
     let original_dropped_position = query_positions.get(event.dropped).unwrap();
     *query_transforms.get_mut(event.dropped).unwrap() = Transform::from_xyz(
-        original_dropped_position.pos.x,
-        original_dropped_position.pos.y,
+        original_dropped_position.world_pos.x,
+        original_dropped_position.world_pos.y,
         0.0,
     );
 }

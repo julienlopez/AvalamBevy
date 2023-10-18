@@ -2,13 +2,17 @@ use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
 mod stack;
+use board::grid_2_world;
 use stack::{Piece, Stack};
 
 mod stack_pieces;
 use stack_pieces::stack_pieces;
 
 mod utils;
-use crate::utils::{stack_to_image_path, BoardPosition};
+use crate::utils::{image_path, stack_to_image_path};
+
+mod board;
+use crate::board::{generate_all_positions, BoardPosition, GridPosition};
 
 fn main() {
     let mut app = App::new();
@@ -23,20 +27,24 @@ fn main() {
 fn spawn_piece_stack(
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
-    color: Piece,
-    x: f32,
+    grid_position: &GridPosition,
 ) {
+    let color = if grid_position.x % 2 == 0 {
+        Piece::Yellow
+    } else {
+        Piece::Red
+    };
     let stack = Stack::new(vec![color]);
+    let board_position = BoardPosition::from_grid_pos(grid_position);
+    let world_pos = board_position.world_pos;
     commands.spawn((
         SpriteBundle {
             texture: asset_server.load(stack_to_image_path(&stack)),
-            transform: Transform::from_xyz(x, 0.0, 0.0),
+            transform: Transform::from_xyz(world_pos.x, world_pos.y, 0.0),
             ..default()
         },
+        board_position,
         stack,
-        BoardPosition {
-            pos: Vec2 { x: x, y: 0.0 },
-        },
         PickableBundle::default(), // <- Makes the mesh pickable.
         On::<Pointer<DragStart>>::target_insert(Pickable::IGNORE), // Disable picking
         On::<Pointer<DragEnd>>::target_insert(Pickable::default()), // Re-enable picking
@@ -49,11 +57,22 @@ fn spawn_piece_stack(
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(Camera2dBundle::default());
+    commands.spawn(Camera2dBundle {
+        transform: Transform {
+            translation: Vec3::new(500.0, 200.0, 0.0),
+            ..default()
+        },
+        ..default()
+    });
 
     // possible to use commands.spawn_batch(vec![]);
-    for x in -2..=2 {
-        let x = x as f32 * 200.0;
-        spawn_piece_stack(&mut commands, &asset_server, Piece::Red, x);
+    for grid_pos in generate_all_positions() {
+        spawn_piece_stack(&mut commands, &asset_server, &grid_pos);
+        let world_pos = grid_2_world(&grid_pos);
+        commands.spawn(SpriteBundle {
+            texture: asset_server.load(image_path("xxxxx")),
+            transform: Transform::from_xyz(world_pos.x, world_pos.y, -1.0),
+            ..default()
+        });
     }
 }
