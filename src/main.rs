@@ -51,6 +51,7 @@ fn spawn_piece_stack(
         On::<Pointer<Drag>>::target_component_mut::<Transform>(|drag, transform| {
             transform.translation.x += drag.delta.x;
             transform.translation.y -= drag.delta.y;
+            transform.translation.z = 1.0;
         }),
         On::<Pointer<Drop>>::run(stack_pieces),
     ));
