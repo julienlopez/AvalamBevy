@@ -13,8 +13,9 @@ pub fn stack_pieces(
     mut query_transforms: Query<&mut Transform>,
     mut query_stacks: Query<&mut Stack>,
 ) {
+    // check if move is valid
     let dropped_stack: Stack = (*(&query_stacks.get(event.dropped).unwrap())).clone();
-    let target_stack: Stack = (*(&query_stacks.get(event.target).unwrap())).clone();
+    let target_stack: &Stack = *(&query_stacks.get(event.target).unwrap());
     if are_not_stackable(&dropped_stack, query_stacks.get(event.target).unwrap())
         || target_stack.get_pieces().len() == 0
     {
@@ -53,7 +54,7 @@ pub fn on_drag_end(
     query_positions: Query<&BoardPosition>,
     mut query_transforms: Query<&mut Transform>,
 ) {
-    commands.entity(event.target).insert(Pickable::default());
+    commands.entity(event.target).insert(Pickable::default()); // makes the entity pickable again
 
     // replace dropped to proper position
     let original_dropped_position = query_positions.get(event.target).unwrap();

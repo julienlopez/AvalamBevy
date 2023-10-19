@@ -47,7 +47,6 @@ fn spawn_piece_stack(
         stack,
         PickableBundle::default(), // <- Makes the mesh pickable.
         On::<Pointer<DragStart>>::target_insert(Pickable::IGNORE), // Disable picking
-        // On::<Pointer<DragEnd>>::target_insert(Pickable::default()), // Re-enable picking
         On::<Pointer<DragEnd>>::run(on_drag_end),
         On::<Pointer<Drag>>::target_component_mut::<Transform>(|drag, transform| {
             transform.translation.x += drag.delta.x;
