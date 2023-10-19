@@ -1,9 +1,25 @@
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
-use crate::board::BoardPosition;
+use crate::board::{BoardPosition, GridPosition};
 use crate::stack::{are_not_stackable, Stack};
 use crate::utils::stack_to_image_path;
+
+fn are_positions_are_next_to_each_other(from: &GridPosition, to: &GridPosition) -> bool {
+    let dx = (from.x as i32 - to.x as i32).abs();
+    let dy = (from.y as i32 - to.y as i32).abs();
+    dx + dy == 1
+}
+
+fn positions_are_next_to_each_other(
+    dropped: Entity,
+    target: Entity,
+    query_positions: &Query<&BoardPosition>,
+) -> bool {
+    let dropped_pos = &query_positions.get(dropped).unwrap().grid_pos;
+    let target_pos = &query_positions.get(target).unwrap().grid_pos;
+    are_positions_are_next_to_each_other(dropped_pos, target_pos)
+}
 
 fn move_is_invalid(
     dropped: Entity,
@@ -13,8 +29,10 @@ fn move_is_invalid(
 ) -> bool {
     let dropped_stack: Stack = (*(&query_stacks.get(dropped).unwrap())).clone();
     let target_stack: &Stack = *(&query_stacks.get(target).unwrap());
+
     are_not_stackable(&dropped_stack, query_stacks.get(target).unwrap())
         || target_stack.get_pieces().len() == 0
+        || !positions_are_next_to_each_other(dropped, target, &query_positions)
 }
 
 fn merge_stacks(dropped: Entity, target: Entity, query_stacks: &mut Query<&mut Stack>) {
@@ -94,4 +112,43 @@ pub fn on_drag_end(
         original_dropped_position.world_pos.y,
         0.0,
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn are_positions_are_next_to_each_other_from_2_1() {
+        let from = GridPosition { x: 2, y: 1 };
+        assert!(are_positions_are_next_to_each_other(
+            &from,
+            &GridPosition { x: 2, y: 2 }
+        ));
+        assert!(are_positions_are_next_to_each_other(
+            &from,
+            &GridPosition { x: 2, y: 0 }
+        ));
+        assert!(are_positions_are_next_to_each_other(
+            &from,
+            &GridPosition { x: 3, y: 1 }
+        ));
+        assert!(are_positions_are_next_to_each_other(
+            &from,
+            &GridPosition { x: 1, y: 1 }
+        ));
+
+        assert!(!are_positions_are_next_to_each_other(
+            &from,
+            &GridPosition { x: 4, y: 1 }
+        ));
+        assert!(!are_positions_are_next_to_each_other(
+            &from,
+            &GridPosition { x: 0, y: 1 }
+        ));
+        assert!(!are_positions_are_next_to_each_other(
+            &from,
+            &GridPosition { x: 3, y: 2 }
+        ));
+    }
 }
