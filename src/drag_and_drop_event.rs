@@ -9,7 +9,8 @@ use crate::utils::stack_to_image_path;
 fn are_positions_are_next_to_each_other(from: &GridPosition, to: &GridPosition) -> bool {
     let dx = (from.x as i32 - to.x as i32).abs();
     let dy = (from.y as i32 - to.y as i32).abs();
-    dx + dy == 1
+    println!("{},{}", dx, dy);
+    dx + dy == 1 || (dx == 1 && dy == 1)
 }
 
 fn positions_are_next_to_each_other(
@@ -165,6 +166,10 @@ mod tests {
             &from,
             &GridPosition { x: 1, y: 1 }
         ));
+        assert!(are_positions_are_next_to_each_other(
+            &from,
+            &GridPosition { x: 3, y: 2 }
+        ));
 
         assert!(!are_positions_are_next_to_each_other(
             &from,
@@ -173,10 +178,6 @@ mod tests {
         assert!(!are_positions_are_next_to_each_other(
             &from,
             &GridPosition { x: 0, y: 1 }
-        ));
-        assert!(!are_positions_are_next_to_each_other(
-            &from,
-            &GridPosition { x: 3, y: 2 }
         ));
     }
 }
