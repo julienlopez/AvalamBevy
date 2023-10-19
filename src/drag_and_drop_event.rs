@@ -1,3 +1,4 @@
+use bevy::ecs::query::QueryEntityError;
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
@@ -15,10 +16,13 @@ fn positions_are_next_to_each_other(
     dropped: Entity,
     target: Entity,
     query_positions: &Query<&BoardPosition>,
-) -> bool {
-    let dropped_pos = &query_positions.get(dropped).unwrap().grid_pos;
-    let target_pos = &query_positions.get(target).unwrap().grid_pos;
-    are_positions_are_next_to_each_other(dropped_pos, target_pos)
+) -> Result<bool, QueryEntityError> {
+    let dropped_pos = &query_positions.get(dropped)?.grid_pos;
+    let target_pos = &query_positions.get(target)?.grid_pos;
+    Ok(are_positions_are_next_to_each_other(
+        dropped_pos,
+        target_pos,
+    ))
 }
 
 fn move_is_invalid(
@@ -26,22 +30,24 @@ fn move_is_invalid(
     target: Entity,
     query_positions: &Query<&BoardPosition>,
     query_stacks: &Query<&mut Stack>,
-) -> bool {
-    let dropped_stack: Stack = (*(&query_stacks.get(dropped).unwrap())).clone();
-    let target_stack: &Stack = *(&query_stacks.get(target).unwrap());
+) -> Result<bool, QueryEntityError> {
+    let dropped_stack: Stack = (*(&query_stacks.get(dropped)?)).clone();
+    let target_stack: &Stack = *(&query_stacks.get(target)?);
 
-    are_not_stackable(&dropped_stack, query_stacks.get(target).unwrap())
+    Ok(are_not_stackable(&dropped_stack, query_stacks.get(target)?)
         || target_stack.get_pieces().len() == 0
-        || !positions_are_next_to_each_other(dropped, target, &query_positions)
+        || !positions_are_next_to_each_other(dropped, target, &query_positions)?)
 }
 
-fn merge_stacks(dropped: Entity, target: Entity, query_stacks: &mut Query<&mut Stack>) {
-    let dropped_stack: Stack = (*(&query_stacks.get(dropped).unwrap())).clone();
-    query_stacks
-        .get_mut(target)
-        .unwrap()
-        .push_stack(dropped_stack);
-    *query_stacks.get_mut(dropped).unwrap() = Stack::default();
+fn merge_stacks(
+    dropped: Entity,
+    target: Entity,
+    query_stacks: &mut Query<&mut Stack>,
+) -> Result<(), QueryEntityError> {
+    let dropped_stack: Stack = (*(&query_stacks.get(dropped)?)).clone();
+    query_stacks.get_mut(target)?.push_stack(dropped_stack);
+    *query_stacks.get_mut(dropped)? = Stack::default();
+    Ok(())
 }
 
 fn update_sprites(
@@ -50,39 +56,41 @@ fn update_sprites(
     asset_server: Res<AssetServer>,
     query_sprites: &mut Query<&mut Handle<Image>>,
     query_stacks: &Query<&mut Stack>,
-) {
-    *query_sprites.get_mut(dropped).unwrap() =
-        asset_server.load(stack_to_image_path(&(&query_stacks).get(dropped).unwrap()));
-    *query_sprites.get_mut(target).unwrap() =
-        asset_server.load(stack_to_image_path(&(&query_stacks).get(target).unwrap()));
+) -> Result<(), QueryEntityError> {
+    *query_sprites.get_mut(dropped)? =
+        asset_server.load(stack_to_image_path((&query_stacks).get(dropped)?));
+    *query_sprites.get_mut(target)? =
+        asset_server.load(stack_to_image_path((&query_stacks).get(target)?));
+    Ok(())
 }
 
 fn reposition_dropped_sprite(
     dropped: Entity,
     query_positions: &Query<&BoardPosition>,
     query_transforms: &mut Query<&mut Transform>,
-) {
-    let original_dropped_position = query_positions.get(dropped).unwrap();
-    *query_transforms.get_mut(dropped).unwrap() = Transform::from_xyz(
+) -> Result<(), QueryEntityError> {
+    let original_dropped_position = query_positions.get(dropped)?;
+    *query_transforms.get_mut(dropped)? = Transform::from_xyz(
         original_dropped_position.world_pos.x,
         original_dropped_position.world_pos.y,
         0.0,
     );
+    Ok(())
 }
 
-pub fn stack_pieces(
+fn do_stack_pieces(
     event: Listener<Pointer<Drop>>,
     asset_server: Res<AssetServer>,
     query_positions: Query<&BoardPosition>,
     mut query_sprites: Query<&mut Handle<Image>>,
     mut query_transforms: Query<&mut Transform>,
     mut query_stacks: Query<&mut Stack>,
-) {
-    if move_is_invalid(event.dropped, event.target, &query_positions, &query_stacks) {
-        return;
+) -> Result<(), QueryEntityError> {
+    if move_is_invalid(event.dropped, event.target, &query_positions, &query_stacks)? {
+        return Ok(());
     }
 
-    merge_stacks(event.dropped, event.target, &mut query_stacks);
+    merge_stacks(event.dropped, event.target, &mut query_stacks)?;
 
     update_sprites(
         event.dropped,
@@ -90,11 +98,31 @@ pub fn stack_pieces(
         asset_server,
         &mut query_sprites,
         &query_stacks,
-    );
+    )?;
 
-    reposition_dropped_sprite(event.dropped, &query_positions, &mut query_transforms);
+    reposition_dropped_sprite(event.dropped, &query_positions, &mut query_transforms)?;
 
     // commands.entity(event.dropped).despawn();
+    Ok(())
+}
+
+pub fn stack_pieces(
+    event: Listener<Pointer<Drop>>,
+    asset_server: Res<AssetServer>,
+    query_positions: Query<&BoardPosition>,
+    query_sprites: Query<&mut Handle<Image>>,
+    query_transforms: Query<&mut Transform>,
+    query_stacks: Query<&mut Stack>,
+) {
+    do_stack_pieces(
+        event,
+        asset_server,
+        query_positions,
+        query_sprites,
+        query_transforms,
+        query_stacks,
+    )
+    .expect("Unable to find entity");
 }
 
 pub fn on_drag_end(
