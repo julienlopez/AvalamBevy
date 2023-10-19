@@ -8,14 +8,16 @@ use crate::utils::stack_to_image_path;
 pub fn stack_pieces(
     event: Listener<Pointer<Drop>>,
     asset_server: Res<AssetServer>,
-    mut commands: Commands,
     query_positions: Query<&BoardPosition>,
     mut query_sprites: Query<&mut Handle<Image>>,
     mut query_transforms: Query<&mut Transform>,
     mut query_stacks: Query<&mut Stack>,
 ) {
     let dropped_stack: Stack = (*(&query_stacks.get(event.dropped).unwrap())).clone();
-    if are_not_stackable(&dropped_stack, query_stacks.get(event.target).unwrap()) {
+    let target_stack: Stack = (*(&query_stacks.get(event.target).unwrap())).clone();
+    if are_not_stackable(&dropped_stack, query_stacks.get(event.target).unwrap())
+        || target_stack.get_pieces().len() == 0
+    {
         return;
     }
 
