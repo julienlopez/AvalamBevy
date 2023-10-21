@@ -2,9 +2,9 @@ use bevy::ecs::query::QueryEntityError;
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
-use crate::board::{BoardPosition, GridPosition};
-use crate::stack::{are_not_stackable, Stack};
-use crate::utils::stack_to_image_path;
+use crate::game::board::{BoardPosition, GridPosition};
+use crate::game::stack::{are_not_stackable, Stack};
+use crate::game::utils::stack_to_image_path;
 
 fn are_positions_are_next_to_each_other(from: &GridPosition, to: &GridPosition) -> bool {
     let dx = (from.x as i32 - to.x as i32).abs();

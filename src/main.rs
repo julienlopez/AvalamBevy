@@ -1,18 +1,16 @@
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
-mod stack;
-use board::grid_2_world;
-use stack::{Piece, Stack};
+mod game;
+mod menu;
 
-mod drag_and_drop_event;
-use drag_and_drop_event::{on_drag_end, stack_pieces};
-
-mod utils;
-use crate::utils::{image_path, stack_to_image_path};
-
-mod board;
-use crate::board::{generate_all_positions, BoardPosition, GridPosition};
+use game::{
+    board::grid_2_world,
+    board::{generate_all_positions, BoardPosition, GridPosition},
+    drag_and_drop_event::{on_drag_end, stack_pieces},
+    stack::{Piece, Stack},
+    utils::{image_path, stack_to_image_path},
+};
 
 fn main() {
     let mut app = App::new();

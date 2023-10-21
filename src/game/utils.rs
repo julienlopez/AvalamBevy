@@ -1,4 +1,4 @@
-use crate::stack::Stack;
+use crate::game::stack::Stack;
 
 pub fn image_path(filename_root: &str) -> String {
     format!("images/{}.png", filename_root).to_string()
