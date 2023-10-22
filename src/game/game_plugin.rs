@@ -18,7 +18,7 @@ impl Plugin for GamePlugin {
             DefaultPlugins.set(low_latency_window_plugin()),
             DefaultPickingPlugins,
         )).add_systems(OnEnter(GameState::Game), game_setup)
-            // .add_systems(Update, game.run_if(in_state(GameState::Game)))
+        .add_systems(Update, check_for_end_of_game.run_if(in_state(GameState::Game)))
             // .add_systems(OnExit(GameState::Game), despawn_screen::<OnGameScreen>)
             ;
     }
@@ -68,4 +68,31 @@ fn spawn_piece_stack(
         }),
         On::<Pointer<Drop>>::run(stack_pieces),
     ));
+}
+
+fn check_for_end_of_game(query: Query<(&BoardPosition, &Stack)>) {
+    let stacks: Vec<(&BoardPosition, &Stack)> = query
+        .iter()
+        .filter(|(_, stack)| stack.get_pieces().len() > 0 && stack.get_pieces().len() < 5)
+        .collect();
+    println!("check_for_end_of_game() : {}", stacks.len());
+    for (board_pos, stack) in stacks {
+        println!(
+            "({}, {}) => {}",
+            board_pos.grid_pos.x,
+            board_pos.grid_pos.y,
+            stack.get_pieces().len()
+        );
+    }
+    // for p in stacks.iter().combinations_with_replacement(2) {
+    //     println!(
+    //         "({}, {}) : {} | {}, {}) : {}",
+    //         p[0].board_pos.grid_pos.x,
+    //         p[0].board_pos.grid_pos.y,
+    //         p[0].stack.get_pieces().len(),
+    //         p[1].board_pos.grid_pos.x,
+    //         p[1].board_pos.grid_pos.y,
+    //         p[1].stack.get_pieces().len()
+    //     );
+    // }
 }
