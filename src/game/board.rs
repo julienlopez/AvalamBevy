@@ -80,3 +80,48 @@ pub fn generate_all_positions() -> Vec<GridPosition> {
         GridPosition { x: 12, y: 7 },
     ]
 }
+
+pub fn are_positions_are_next_to_each_other(from: &GridPosition, to: &GridPosition) -> bool {
+    let dx = (from.x as i32 - to.x as i32).abs();
+    let dy = (from.y as i32 - to.y as i32).abs();
+    dx + dy == 1 || (dx == 1 && dy == 1)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn are_positions_are_next_to_each_other_from_2_1() {
+        let from = GridPosition { x: 2, y: 1 };
+        assert!(are_positions_are_next_to_each_other(
+            &from,
+            &GridPosition { x: 2, y: 2 }
+        ));
+        assert!(are_positions_are_next_to_each_other(
+            &from,
+            &GridPosition { x: 2, y: 0 }
+        ));
+        assert!(are_positions_are_next_to_each_other(
+            &from,
+            &GridPosition { x: 3, y: 1 }
+        ));
+        assert!(are_positions_are_next_to_each_other(
+            &from,
+            &GridPosition { x: 1, y: 1 }
+        ));
+        assert!(are_positions_are_next_to_each_other(
+            &from,
+            &GridPosition { x: 3, y: 2 }
+        ));
+
+        assert!(!are_positions_are_next_to_each_other(
+            &from,
+            &GridPosition { x: 4, y: 1 }
+        ));
+        assert!(!are_positions_are_next_to_each_other(
+            &from,
+            &GridPosition { x: 0, y: 1 }
+        ));
+    }
+}
