@@ -3,7 +3,9 @@ use bevy_mod_picking::prelude::*;
 
 use crate::game::{
     board::grid_2_world,
-    board::{generate_all_positions, BoardPosition, GridPosition},
+    board::{
+        are_positions_are_next_to_each_other, generate_all_positions, BoardPosition, GridPosition,
+    },
     drag_and_drop_event::{on_drag_end, stack_pieces},
     stack::{Piece, Stack},
     utils::{image_path, stack_to_image_path},
@@ -70,29 +72,76 @@ fn spawn_piece_stack(
     ));
 }
 
+use itertools::Itertools;
+
 fn check_for_end_of_game(query: Query<(&BoardPosition, &Stack)>) {
     let stacks: Vec<(&BoardPosition, &Stack)> = query
         .iter()
         .filter(|(_, stack)| stack.get_pieces().len() > 0 && stack.get_pieces().len() < 5)
         .collect();
-    println!("check_for_end_of_game() : {}", stacks.len());
-    for (board_pos, stack) in stacks {
-        println!(
-            "({}, {}) => {}",
-            board_pos.grid_pos.x,
-            board_pos.grid_pos.y,
-            stack.get_pieces().len()
-        );
+    if !are_any_move_possible(stacks) {
+        println!("End of game!");
     }
-    // for p in stacks.iter().combinations_with_replacement(2) {
-    //     println!(
-    //         "({}, {}) : {} | {}, {}) : {}",
-    //         p[0].board_pos.grid_pos.x,
-    //         p[0].board_pos.grid_pos.y,
-    //         p[0].stack.get_pieces().len(),
-    //         p[1].board_pos.grid_pos.x,
-    //         p[1].board_pos.grid_pos.y,
-    //         p[1].stack.get_pieces().len()
-    //     );
-    // }
+}
+
+fn are_any_move_possible(stacks: Vec<(&BoardPosition, &Stack)>) -> bool {
+    stacks.iter().combinations(2).any(|c| {
+        are_positions_are_next_to_each_other(&c[0].0.grid_pos, &c[1].0.grid_pos)
+            && c[0].1.get_pieces().len() + c[1].1.get_pieces().len() < 6
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn are_any_move_possible_with_no_stack() {
+        let stacks: Vec<(&BoardPosition, &Stack)> = vec![];
+        assert!(!are_any_move_possible(stacks));
+    }
+
+    fn create_basic_stack(grid_pos: GridPosition, stack: Stack) -> (BoardPosition, Stack) {
+        (
+            BoardPosition {
+                grid_pos,
+                world_pos: Vec2 { x: 0., y: 0. },
+            },
+            stack,
+        )
+    }
+
+    #[test]
+    fn are_any_move_possible_with_no_adjacent_stack() {
+        let stacks: Vec<(BoardPosition, Stack)> = vec![
+            create_basic_stack(GridPosition { x: 1, y: 1 }, Stack::default()),
+            create_basic_stack(GridPosition { x: 3, y: 4 }, Stack::default()),
+        ];
+        let stacks_ref: Vec<(&BoardPosition, &Stack)> =
+            stacks.iter().map(|(a, b)| (a, b)).collect();
+        assert_eq!(are_any_move_possible(stacks_ref), false);
+    }
+
+    #[test]
+    fn are_any_move_possible_with_two_adjacent_stack() {
+        let stacks: Vec<(BoardPosition, Stack)> = vec![
+            create_basic_stack(GridPosition { x: 1, y: 1 }, Stack::default()),
+            create_basic_stack(GridPosition { x: 1, y: 2 }, Stack::default()),
+        ];
+        let stacks_ref: Vec<(&BoardPosition, &Stack)> =
+            stacks.iter().map(|(a, b)| (a, b)).collect();
+        assert_eq!(are_any_move_possible(stacks_ref), true);
+    }
+
+    #[test]
+    fn are_any_move_possible_with_two_adjacent_stack_too_big() {
+        let stack = Stack::new(vec![Piece::Yellow, Piece::Red, Piece::Red]);
+        let stacks: Vec<(BoardPosition, Stack)> = vec![
+            create_basic_stack(GridPosition { x: 1, y: 1 }, stack.clone()),
+            create_basic_stack(GridPosition { x: 1, y: 2 }, stack.clone()),
+        ];
+        let stacks_ref: Vec<(&BoardPosition, &Stack)> =
+            stacks.iter().map(|(a, b)| (a, b)).collect();
+        assert_eq!(are_any_move_possible(stacks_ref), false);
+    }
 }
