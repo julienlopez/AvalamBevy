@@ -1,16 +1,21 @@
 use bevy::prelude::*;
 
+mod end_panel;
 mod game;
 mod gamestate;
 mod menu;
+mod ui_utils;
 
 use crate::gamestate::GameState;
-use crate::{game::game_plugin::GamePlugin, menu::menu_plugin::MenuPlugin};
+use crate::{
+    end_panel::end_panel_plugin::EndPanelPlugin, game::game_plugin::GamePlugin,
+    menu::menu_plugin::MenuPlugin,
+};
 
 fn main() {
     let mut app = App::new();
     app.add_state::<GameState>()
-        .add_plugins((MenuPlugin, GamePlugin))
+        .add_plugins((MenuPlugin, GamePlugin, EndPanelPlugin))
         .add_systems(Startup, setup);
     app.run();
 }

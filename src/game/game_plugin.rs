@@ -10,6 +10,7 @@ use crate::game::{
     stack::{Piece, Stack},
     utils::{image_path, stack_to_image_path},
 };
+
 use crate::gamestate::GameState;
 
 pub struct GamePlugin;
@@ -74,13 +75,16 @@ fn spawn_piece_stack(
 
 use itertools::Itertools;
 
-fn check_for_end_of_game(query: Query<(&BoardPosition, &Stack)>) {
+fn check_for_end_of_game(
+    query: Query<(&BoardPosition, &Stack)>,
+    mut game_state: ResMut<NextState<GameState>>,
+) {
     let stacks: Vec<(&BoardPosition, &Stack)> = query
         .iter()
         .filter(|(_, stack)| stack.get_pieces().len() > 0 && stack.get_pieces().len() < 5)
         .collect();
     if !are_any_move_possible(stacks) {
-        println!("End of game!");
+        game_state.set(GameState::EndPanel);
     }
 }
 
