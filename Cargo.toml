@@ -16,3 +16,4 @@ opt-level = 3
 [dependencies]
 bevy = { version = "0.11.3", features = ["dynamic_linking"] }
 bevy_mod_picking = { git = "https://github.com/aevyrie/bevy_mod_picking" }
+itertools = "0.11.0"

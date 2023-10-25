@@ -2,16 +2,9 @@ use bevy::ecs::query::QueryEntityError;
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
-use crate::board::{BoardPosition, GridPosition};
-use crate::stack::{are_not_stackable, Stack};
-use crate::utils::stack_to_image_path;
-
-fn are_positions_are_next_to_each_other(from: &GridPosition, to: &GridPosition) -> bool {
-    let dx = (from.x as i32 - to.x as i32).abs();
-    let dy = (from.y as i32 - to.y as i32).abs();
-    println!("{},{}", dx, dy);
-    dx + dy == 1 || (dx == 1 && dy == 1)
-}
+use crate::game::board::{are_positions_are_next_to_each_other, BoardPosition, GridPosition};
+use crate::game::stack::{are_not_stackable, Stack};
+use crate::game::utils::stack_to_image_path;
 
 fn positions_are_next_to_each_other(
     dropped: Entity,
@@ -141,43 +134,4 @@ pub fn on_drag_end(
         original_dropped_position.world_pos.y,
         0.0,
     );
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn are_positions_are_next_to_each_other_from_2_1() {
-        let from = GridPosition { x: 2, y: 1 };
-        assert!(are_positions_are_next_to_each_other(
-            &from,
-            &GridPosition { x: 2, y: 2 }
-        ));
-        assert!(are_positions_are_next_to_each_other(
-            &from,
-            &GridPosition { x: 2, y: 0 }
-        ));
-        assert!(are_positions_are_next_to_each_other(
-            &from,
-            &GridPosition { x: 3, y: 1 }
-        ));
-        assert!(are_positions_are_next_to_each_other(
-            &from,
-            &GridPosition { x: 1, y: 1 }
-        ));
-        assert!(are_positions_are_next_to_each_other(
-            &from,
-            &GridPosition { x: 3, y: 2 }
-        ));
-
-        assert!(!are_positions_are_next_to_each_other(
-            &from,
-            &GridPosition { x: 4, y: 1 }
-        ));
-        assert!(!are_positions_are_next_to_each_other(
-            &from,
-            &GridPosition { x: 0, y: 1 }
-        ));
-    }
 }
