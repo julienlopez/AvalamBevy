@@ -6,7 +6,7 @@ mod gamestate;
 mod menu;
 mod ui_utils;
 
-use crate::gamestate::GameState;
+use crate::gamestate::{FinalScore, GameState};
 use crate::{
     end_panel::end_panel_plugin::EndPanelPlugin, game::game_plugin::GamePlugin,
     menu::menu_plugin::MenuPlugin,
@@ -15,6 +15,7 @@ use crate::{
 fn main() {
     let mut app = App::new();
     app.add_state::<GameState>()
+        .insert_resource(FinalScore { score: None })
         .add_plugins((MenuPlugin, GamePlugin, EndPanelPlugin))
         .add_systems(Startup, setup);
     app.run();

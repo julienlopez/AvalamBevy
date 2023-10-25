@@ -1,14 +1,18 @@
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
-use crate::game::{
-    board::grid_2_world,
-    board::{
-        are_positions_are_next_to_each_other, generate_all_positions, BoardPosition, GridPosition,
+use crate::{
+    game::{
+        board::grid_2_world,
+        board::{
+            are_positions_are_next_to_each_other, generate_all_positions, BoardPosition,
+            GridPosition,
+        },
+        drag_and_drop_event::{on_drag_end, stack_pieces},
+        stack::{Piece, Stack},
+        utils::{image_path, stack_to_image_path},
     },
-    drag_and_drop_event::{on_drag_end, stack_pieces},
-    stack::{Piece, Stack},
-    utils::{image_path, stack_to_image_path},
+    gamestate::{FinalScore, Score},
 };
 
 use crate::gamestate::GameState;
@@ -78,12 +82,14 @@ use itertools::Itertools;
 fn check_for_end_of_game(
     query: Query<(&BoardPosition, &Stack)>,
     mut game_state: ResMut<NextState<GameState>>,
+    mut score: ResMut<FinalScore>,
 ) {
     let stacks: Vec<(&BoardPosition, &Stack)> = query
         .iter()
         .filter(|(_, stack)| stack.get_pieces().len() > 0 && stack.get_pieces().len() < 5)
         .collect();
     if !are_any_move_possible(stacks) {
+        score.score = Some(Score { red: 0, yellow: 0 }); // TODO compute
         game_state.set(GameState::EndPanel);
     }
 }
